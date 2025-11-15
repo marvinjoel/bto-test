@@ -1,0 +1,7 @@
+.idea
+.env
+.venv
+rasa/models
+.rasa
+actions/__pycache__/
+src/services/__pycache__/

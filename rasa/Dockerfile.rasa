@@ -1,0 +1,16 @@
+FROM rasa/rasa:3.5.10
+
+WORKDIR /app
+
+COPY --chown=rasa:rasa data/ ./data/
+COPY --chown=rasa:rasa models/ ./models/
+COPY --chown=rasa:rasa config.yml ./config.yml
+COPY --chown=rasa:rasa domain.yml ./domain.yml
+COPY --chown=rasa:rasa endpoints.yml ./endpoints.yml
+
+USER rasa
+
+EXPOSE 5005
+
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["rasa train && rasa run -m models --enable-api --cors '*' --debug"]

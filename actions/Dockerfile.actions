@@ -1,0 +1,11 @@
+FROM rasa/rasa-sdk:3.5.0
+
+WORKDIR /app
+
+COPY --chown=rasa:rasa . /app/actions/
+
+USER root
+
+RUN pip install --no-cache-dir requests python-dotenv
+
+EXPOSE 5055

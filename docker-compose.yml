@@ -1,0 +1,53 @@
+services:
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      - rasa_app
+    networks:
+      - chatbot_network
+
+  rasa_app:
+    build:
+      context: ./rasa
+      dockerfile: Dockerfile.rasa
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./rasa/data:/app/data
+      - ./rasa/models:/app/models
+    networks:
+      - chatbot_network
+    depends_on:
+      - action_server
+
+  action_server:
+    build:
+      context: ./actions
+      dockerfile: Dockerfile.actions
+    env_file:
+      - .env
+    volumes:
+      - ./actions:/app/actions
+      - ./src:/app/src
+    ports:
+      - "5055:5055"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5055" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - chatbot_network
+
+networks:
+  chatbot_network:
+    driver: bridge

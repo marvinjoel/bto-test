@@ -1,0 +1,41 @@
+version: "3.1"
+
+stories:
+
+- story: happy path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_great
+  - action: utter_happy
+
+  - intent: pedir_cita
+  - action: utter_ask_name
+  - intent: dar_nombre
+  - slot_was_set:
+      - name: "<nombre del paciente>"
+  - action: utter_ask_date
+  - intent: dar_fecha
+  - slot_was_set:
+      - date: "<fecha de la cita>"
+  - action: action_create_appointment
+
+- story: sad path 1
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_unhappy
+  - action: utter_cheer_up
+  - action: utter_did_that_help
+  - intent: affirm
+  - action: utter_happy
+
+- story: sad path 2
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_unhappy
+  - action: utter_cheer_up
+  - action: utter_did_that_help
+  - intent: deny
+  - action: utter_goodbye
