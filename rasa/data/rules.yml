@@ -11,3 +11,12 @@ rules:
   steps:
     - intent: goodbye
     - action: utter_goodbye
+#      ------/ eliminar si falla lo de abajo
+- rule: Submit appointment form
+  condition:
+    - active_loop: appointment_form
+  steps:
+    - action: appointment_form
+    - active_loop: null
+    - action: action_create_appointment
+    - action: utter_goodbye

@@ -5,7 +5,7 @@ from fastapi.params import Body
 
 router = APIRouter()
 
-@router.post("")
+@router.post("", tags=["appointments"])
 def create_appointment_endpoint(data: dict = Body(...)):
     """
     Endpoint para crear una cita, consumido por Rasa Action Server.
