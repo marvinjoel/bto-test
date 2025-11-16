@@ -11,7 +11,7 @@ rules:
   steps:
     - intent: goodbye
     - action: utter_goodbye
-#      ------/ eliminar si falla lo de abajo
+
 - rule: Submit appointment form
   condition:
     - active_loop: appointment_form
@@ -20,3 +20,10 @@ rules:
     - active_loop: null
     - action: action_create_appointment
     - action: utter_goodbye
+
+#      ------/ eliminar si falla lo de abajo
+- rule: Start appointment form when user asks for a cita
+  steps:
+    - intent: pedir_cita
+    - action: appointment_form
+    - active_loop: appointment_form
