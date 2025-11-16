@@ -5,12 +5,13 @@ intents:
   - goodbye
   - affirm
   - deny
-  - mood_great
-  - mood_unhappy
-  - bot_challenge
   - pedir_cita
   - dar_nombre
   - dar_fecha
+
+entities:
+  - name
+  - date
 
 slots:
   name:
@@ -19,38 +20,33 @@ slots:
     mappings:
       - type: from_entity
         entity: name
-
+      - type: from_text
+        intent: None
+        conditions:
+          - active_loop: appointment_form
+            requested_slot: name
   date:
     type: text
     influence_conversation: true
     mappings:
       - type: from_entity
         entity: date
-
-entities:
-  - name
-  - date
-
+      - type: from_text
+        intent: None
+        conditions:
+          - active_loop: appointment_form
+            requested_slot: date
 
 responses:
   utter_greet:
   - text: "¡Hola! ¿Cómo estás?"
 
-  utter_cheer_up:
-  - text: "Here is something to cheer you up:"
-    image: "https://i.imgur.com/nGF1K8f.jpg"
-
-  utter_did_that_help:
-  - text: "¿Te ha servido de ayuda?"
-
-  utter_happy:
-  - text: "¡Genial, sigue así!"
-
   utter_goodbye:
-  - text: "Adiós"
+  - text: "Adiós, que tengas un buen día."
 
-  utter_iamabot:
-  - text: "Soy un bot, impulsado por Rasa."
+  utter_ask_what_next:
+    - text: "Entendido. ¿En qué te puedo ayudar?"
+    - text: "Perfecto. ¿Cómo puedo asistirte hoy?"
 
   utter_ask_name:
     - text: "¿Podrías indicarme tu nombre completo, por favor?"
@@ -58,8 +54,19 @@ responses:
   utter_ask_date:
     - text: "¿Qué día deseas agendar tu cita?"
 
+  utter_api_error:
+    - text: "⚠️ Lo siento, nuestros sistemas de agendamiento no están disponibles en este momento. Por favor, intenta más tarde."
+  utter_api_error_reason:
+    - text: "⚠️ No se pudo registrar la cita. Motivo: {error_reason}"
+
 actions:
   - action_create_appointment
+
+forms:
+  appointment_form:
+    required_slots:
+      - name
+      - date
 
 session_config:
   session_expiration_time: 60

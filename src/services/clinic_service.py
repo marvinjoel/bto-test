@@ -6,8 +6,9 @@ class ClinicService:
         self.base_url = os.getenv("CLINIC_API_URL")
         self.api_key = os.getenv("CLINIC_API_KEY")
         self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "x-api-key": self.api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
 
     def get_patient_info(self, patient_id: str) -> dict:

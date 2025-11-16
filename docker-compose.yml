@@ -36,7 +36,6 @@ services:
       - .env
     volumes:
       - ./actions:/app/actions
-      - ./src:/app/src
     ports:
       - "5055:5055"
     healthcheck:
