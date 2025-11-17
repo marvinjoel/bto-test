@@ -10,6 +10,7 @@ rules:
 - rule: Say goodbye anytime the user says goodbye
   steps:
     - intent: goodbye
+    - action: utter_goodbye
 
 - rule: Start appointment form when user asks for a cita
   steps:
