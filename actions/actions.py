@@ -49,7 +49,7 @@ class ActionCreateAppointment(Action):
         }
 
         try:
-            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+            response = requests.post(f"{api_url}/appointments", json=payload, headers=headers, timeout=10)
             if response.status_code in [200, 201]:
                 dispatcher.utter_message(
                     f"Perfecto {name}, tu cita ha sido registrada para el {date_of_attention}."
@@ -70,27 +70,54 @@ class ActionCreateAppointment(Action):
         return [SlotSet("name", None), SlotSet("date", None)]
 
     def convert_date(self, text):
+        import re
         text = text.lower().strip()
 
-        # 1️⃣ Formato: 25/11/2025
+        # Mapa de meses
+        months = {
+            "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+            "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+            "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
+        }
+
+        # 1️⃣ Formato exacto: 25/11/2025
         try:
             return datetime.strptime(text, "%d/%m/%Y").strftime("%Y-%m-%d")
         except:
             pass
 
-        # 2️⃣ Formato: 25-11-2025
+        # 2️⃣ Formato exacto: 25-11-2025
         try:
             return datetime.strptime(text, "%d-%m-%Y").strftime("%Y-%m-%d")
         except:
             pass
 
-        # 3️⃣ Formato: "martes 25", "lunes 10", etc.
-        if any(x in text for x in ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]):
-            # Extraer "25" de "martes 25"
-            day_number = int("".join(filter(str.isdigit, text)))
+        # 3️⃣ Formato: "25 de noviembre"
+        match = re.match(r"(\d{1,2})\s*de\s*(\w+)", text)
+        if match:
+            day = int(match.group(1))
+            month_name = match.group(2)
+            if month_name in months:
+                month = months[month_name]
+                year = datetime.now().year
+                return f"{year}-{month}-{day:02d}"
 
-            today = datetime.now()
-            return f"{today.year}-{today.month:02d}-{day_number:02d}"
+        # 4️⃣ Formato: "martes 25" → usa mes actual
+        dias = [
+            "lunes", "martes", "miercoles", "miércoles",
+            "jueves", "viernes", "sabado", "sábado", "domingo"
+        ]
 
-        # Si nada coincide
+        if any(d in text for d in dias):
+            number = re.findall(r"\d+", text)
+            if number:
+                day = int(number[0])
+                now = datetime.now()
+                return f"{now.year}-{now.month:02d}-{day:02d}"
+
+        # 5️⃣ "el próximo lunes"
+        if "próximo" in text or "proximo" in text:
+            # EXTRA: si quieres lo implementamos
+            pass
+
         raise ValueError("No pude convertir la fecha")

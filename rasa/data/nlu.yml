@@ -36,6 +36,10 @@ nlu:
     - Para el [2025-11-12](date)
     - El próximo [martes](date)
     - Quiero una cita el [lunes](date)
+    - [martes 25](date)
+    - [martes 25 de noviembre](date)
+    - [lunes 10](date)
+    - [viernes 8](date)
 
 - intent: affirm
   examples: |

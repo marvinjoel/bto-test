@@ -32,7 +32,6 @@ slots:
       - type: from_entity
         entity: date
       - type: from_text
-        intent: None
         conditions:
           - active_loop: appointment_form
             requested_slot: date
