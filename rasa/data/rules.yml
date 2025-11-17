@@ -10,7 +10,12 @@ rules:
 - rule: Say goodbye anytime the user says goodbye
   steps:
     - intent: goodbye
-    - action: utter_goodbye
+
+- rule: Start appointment form when user asks for a cita
+  steps:
+    - intent: pedir_cita
+    - action: appointment_form
+    - active_loop: appointment_form
 
 - rule: Submit appointment form
   condition:
@@ -19,11 +24,3 @@ rules:
     - action: appointment_form
     - active_loop: null
     - action: action_create_appointment
-    - action: utter_goodbye
-
-#      ------/ eliminar si falla lo de abajo
-- rule: Start appointment form when user asks for a cita
-  steps:
-    - intent: pedir_cita
-    - action: appointment_form
-    - active_loop: appointment_form

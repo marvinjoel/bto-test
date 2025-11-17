@@ -5,10 +5,10 @@ stories:
 # --- HISTORIA DE CHITCHAT (OPCIONAL PERO RECOMENDADA) ---
 - story: Chitchat
   steps:
-  - intent: greet
-  - action: utter_greet
-  - intent: affirm
-  - action: utter_ask_what_next # Tu sugerencia de "En qué te ayudo"
+    - intent: greet
+    - action: utter_greet
+    - intent: affirm
+    - action: utter_ask_what_next
 
 # --- HISTORIA DE NEGOCIO 1: Directo a la cita ---
 - story: Flujo de agendamiento (Directo)
@@ -26,7 +26,6 @@ stories:
   - active_loop: null # El form termina
   # 3. LA LÓGICA QUE FALTABA:
   - action: action_create_appointment
-  - action: utter_goodbye
 
 # --- HISTORIA DE NEGOCIO 2: Saludo -> Cita ---
 - story: Flujo de agendamiento (Después de Saludar)
@@ -46,4 +45,3 @@ stories:
   - active_loop: null # El form termina
   # 3. LA LÓGICA QUE FALTABA:
   - action: action_create_appointment
-  - action: utter_goodbye
