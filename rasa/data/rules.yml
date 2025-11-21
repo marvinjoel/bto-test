@@ -2,26 +2,32 @@ version: "3.1"
 
 rules:
 
-- rule: Greet user
+- rule: Saludo
   steps:
     - intent: greet
     - action: utter_greet
 
-- rule: Say goodbye anytime the user says goodbye
+- rule: Despedida
   steps:
     - intent: goodbye
     - action: utter_goodbye
 
-- rule: Start appointment form when user asks for a cita
+- rule: Iniciar proceso de cita
   steps:
     - intent: pedir_cita
-    - action: appointment_form
-    - active_loop: appointment_form
+    - action: utter_ask_name
 
-- rule: Submit appointment form
-  condition:
-    - active_loop: appointment_form
+- rule: Usuario da nombre → pedir fecha
   steps:
-    - action: appointment_form
-    - active_loop: null
+    - intent: dar_nombre
+    - action: utter_ask_date
+
+- rule: Usuario da fecha → consultar disponibilidad
+  steps:
+    - intent: dar_fecha
+    - action: action_check_availability
+
+- rule: Usuario elige hora → crear cita
+  steps:
+    - intent: affirm
     - action: action_create_appointment

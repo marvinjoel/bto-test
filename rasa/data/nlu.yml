@@ -59,3 +59,11 @@ nlu:
     - no, gracias
     - no quiero
     - not really
+
+- intent: dar_hora
+  examples: |
+    - 10:00
+    - a las 11:20
+    - 11:40
+    - 09:20
+    - quiero la hora 14:00

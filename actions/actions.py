@@ -9,24 +9,88 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 BACKEND_URL = os.getenv("BACKEND_API_URL", "http://python_app:8000/api")
 
+
+class ActionCheckAvailability(Action):
+    def name(self):
+        return "action_check_availability"
+
+    def run(self, dispatcher, tracker, domain):
+        name = tracker.get_slot("name")
+        date_text = tracker.get_slot("date")
+
+        # Convertir fecha
+        try:
+            date_of_attention = self.convert_date(date_text)
+        except Exception:
+            dispatcher.utter_message("Lo siento, no pude entender la fecha. ¿Puedes repetirla?")
+            return []
+
+        # Llamar API availability
+        api_url = os.getenv("CLINIC_API_URL")
+        api_key = os.getenv("CLINIC_API_KEY")
+
+        doctor_id = int(os.getenv("CLINIC_DOCTOR_ID"))
+        speciality_id = int(os.getenv("CLINIC_SPECIALITY_ID"))
+
+        url = (
+            f"{api_url}/schedules/availability"
+            f"?doctorId={doctor_id}&specialityId={speciality_id}"
+            f"&startDate={date_of_attention}&endDate={date_of_attention}"
+        )
+
+        headers = {"x-api-key": api_key, "accept": "application/json"}
+
+        logger.info(f"Consultando horarios: {url}")
+
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            data = response.json()
+
+            if not data["data"]:
+                dispatcher.utter_message(
+                    f"Lo siento {name}, no hay horarios disponibles el {date_of_attention}. "
+                    "¿Quieres escoger otra fecha?"
+                )
+                return []
+
+            # Extraer horas
+            hours = [item["start_time"] for item in data["data"]]
+
+            # Mostrar horas al usuario
+            dispatcher.utter_message(
+                f"Perfecto {name}, estos son los horarios disponibles para el {date_of_attention}:"
+            )
+
+            msg = "\n".join([f"• {h}" for h in hours])
+            dispatcher.utter_message(msg)
+
+            dispatcher.utter_message("¿Cuál horario deseas reservar?")
+
+            return [
+                SlotSet("converted_date", date_of_attention),
+                SlotSet("available_hours", hours)
+            ]
+
+        except Exception as e:
+            logger.exception(f"Error consultando horarios: {e}")
+            dispatcher.utter_message("Lo siento, no pude obtener los horarios disponibles.")
+            return []
+
+
 class ActionCreateAppointment(Action):
     def name(self):
         return "action_create_appointment"
 
     def run(self, dispatcher, tracker, domain):
         name = tracker.get_slot("name")
-        date_text = tracker.get_slot("date")
+        chosen_hour = tracker.get_slot("hour")
+        date_of_attention = tracker.get_slot("converted_date")
 
-        # Convertir fecha a formato YYYY-MM-DD
-        try:
-            date_of_attention = self.convert_date(date_text)
-        except Exception as e:
-            dispatcher.utter_message(
-                "Lo siento, no pude entender la fecha. ¿Podrías indicarla nuevamente?"
-            )
+        if not chosen_hour:
+            dispatcher.utter_message("Por favor indícame qué horario deseas reservar.")
             return []
 
-        # Cargar valores estáticos desde variables de entorno
+        # Construir payload usando HORA SELECCIONADA
         payload = {
             "doctor_id": int(os.getenv("CLINIC_DOCTOR_ID")),
             "speciality_id": int(os.getenv("CLINIC_SPECIALITY_ID")),
@@ -35,8 +99,8 @@ class ActionCreateAppointment(Action):
             "schedule_detail_id": int(os.getenv("CLINIC_SCHEDULE_DETAIL_ID")),
             "establishment_id": int(os.getenv("CLINIC_ESTABLISHMENT_ID")),
             "date_of_attention": date_of_attention,
-            "hour_of_attention": "09:00:00",
-            "state_admission_id": os.getenv("CLINIC_STATE_ADMISSION_ID")
+            "hour_of_attention": f"{chosen_hour}:00",
+            "state_admission_id": str(os.getenv("CLINIC_STATE_ADMISSION_ID"))
         }
 
         api_url = os.getenv("CLINIC_API_URL")
@@ -49,75 +113,61 @@ class ActionCreateAppointment(Action):
         }
 
         try:
-            response = requests.post(f"{api_url}/appointments", json=payload, headers=headers, timeout=10)
+            response = requests.post(f"{api_url}/appointments", json=payload, headers=headers)
+
+            logger.info(f"Payload enviado: {payload}")
+            logger.info(f"Respuesta: {response.text}")
+
             if response.status_code in [200, 201]:
                 dispatcher.utter_message(
-                    f"Perfecto {name}, tu cita ha sido registrada para el {date_of_attention}."
+                    f"Perfecto {name}, tu cita ha sido registrada para el {date_of_attention} a las {chosen_hour}."
                 )
             else:
-                dispatcher.utter_message(
-                    "⚠️ Lo siento, no pude completar la reserva. Inténtalo más tarde."
-                )
-                print("Error:", response.text)
-
+                dispatcher.utter_message("Lo siento, no pude completar la reserva.")
         except Exception as e:
-            dispatcher.utter_message(
-                "⚠️ Lo siento, no pude comunicarme con el servicio de citas. Inténtalo más tarde."
-            )
-            print("Exception:", e)
+            logger.exception(f"Error creando cita: {e}")
+            dispatcher.utter_message("Hubo un problema con el servidor, intenta más tarde.")
 
-        # limpiar slots
-        return [SlotSet("name", None), SlotSet("date", None)]
+        # Limpiar
+        return [
+            SlotSet("name", None),
+            SlotSet("date", None),
+            SlotSet("hour", None),
+            SlotSet("available_hours", None),
+            SlotSet("converted_date", None)
+        ]
 
     def convert_date(self, text):
         import re
         text = text.lower().strip()
 
-        # Mapa de meses
-        months = {
-            "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
-            "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
-            "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
-        }
+        # SIEMPRE usar SEPTIEMBRE
+        MONTH = "09"
+        YEAR = datetime.now().year
 
-        # 1️⃣ Formato exacto: 25/11/2025
+        # 1️⃣ Formatos exactos: 25/09/2025 o 25-09-2025
         try:
-            return datetime.strptime(text, "%d/%m/%Y").strftime("%Y-%m-%d")
+            date = datetime.strptime(text, "%d/%m/%Y")
+            return date.strftime("%Y-%m-%d")
         except:
             pass
 
-        # 2️⃣ Formato exacto: 25-11-2025
         try:
-            return datetime.strptime(text, "%d-%m-%Y").strftime("%Y-%m-%d")
+            date = datetime.strptime(text, "%d-%m-%Y")
+            return date.strftime("%Y-%m-%d")
         except:
             pass
 
-        # 3️⃣ Formato: "25 de noviembre"
-        match = re.match(r"(\d{1,2})\s*de\s*(\w+)", text)
+        # 2️⃣ Formato: "martes 21"  → día extraído + mes fijo septiembre
+        numbers = re.findall(r"\d+", text)
+        if numbers:
+            day = int(numbers[0])
+            return f"{YEAR}-{MONTH}-{day:02d}"
+
+        # 3️⃣ Formato: "21 de septiembre"  → igual, pero ignoramos lo que diga el usuario
+        match = re.match(r"(\d{1,2})\s*de\s*\w+", text)
         if match:
             day = int(match.group(1))
-            month_name = match.group(2)
-            if month_name in months:
-                month = months[month_name]
-                year = datetime.now().year
-                return f"{year}-{month}-{day:02d}"
-
-        # 4️⃣ Formato: "martes 25" → usa mes actual
-        dias = [
-            "lunes", "martes", "miercoles", "miércoles",
-            "jueves", "viernes", "sabado", "sábado", "domingo"
-        ]
-
-        if any(d in text for d in dias):
-            number = re.findall(r"\d+", text)
-            if number:
-                day = int(number[0])
-                now = datetime.now()
-                return f"{now.year}-{now.month:02d}-{day:02d}"
-
-        # 5️⃣ "el próximo lunes"
-        if "próximo" in text or "proximo" in text:
-            # EXTRA: si quieres lo implementamos
-            pass
+            return f"{YEAR}-{MONTH}-{day:02d}"
 
         raise ValueError("No pude convertir la fecha")

@@ -8,10 +8,12 @@ intents:
   - pedir_cita
   - dar_nombre
   - dar_fecha
+  - dar_hora
 
 entities:
   - name
   - date
+  - hour
 
 slots:
   name:
@@ -21,10 +23,10 @@ slots:
       - type: from_entity
         entity: name
       - type: from_text
-        intent: None
         conditions:
           - active_loop: appointment_form
             requested_slot: name
+
   date:
     type: text
     influence_conversation: true
@@ -36,12 +38,34 @@ slots:
           - active_loop: appointment_form
             requested_slot: date
 
+  hour:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: hour
+      - type: from_text
+
+  # ESTE ESTABA MAL → Ahora tiene mappings Dummy
+  available_hours:
+    type: list
+    influence_conversation: false
+    mappings:
+      - type: custom
+
+  # ESTE TAMBIÉN NECESITA MAPPINGS OBLIGATORIAMENTE
+  converted_date:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: custom
+
 responses:
   utter_greet:
-  - text: "¡Hola! ¿Cómo estás?"
+    - text: "¡Hola! ¿Cómo estás?"
 
   utter_goodbye:
-  - text: "Adiós, que tengas un buen día."
+    - text: "Adiós, que tengas un buen día."
 
   utter_ask_what_next:
     - text: "Entendido. ¿En qué te puedo ayudar?"
@@ -55,10 +79,12 @@ responses:
 
   utter_api_error:
     - text: "⚠️ Lo siento, nuestros sistemas de agendamiento no están disponibles en este momento. Por favor, intenta más tarde."
+
   utter_api_error_reason:
     - text: "⚠️ No se pudo registrar la cita. Motivo: {error_reason}"
 
 actions:
+  - action_check_availability
   - action_create_appointment
 
 forms:

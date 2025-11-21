@@ -2,7 +2,7 @@ version: "3.1"
 
 stories:
 
-# --- HISTORIA DE CHITCHAT (OPCIONAL PERO RECOMENDADA) ---
+# --- CHITCHAT ---
 - story: Chitchat
   steps:
     - intent: greet
@@ -10,38 +10,58 @@ stories:
     - intent: affirm
     - action: utter_ask_what_next
 
-# --- HISTORIA DE NEGOCIO 1: Directo a la cita ---
-- story: Flujo de agendamiento (Directo)
+# --- FLUJO 1: Pedir cita directo ---
+- story: Flujo de agendamiento directo
   steps:
-  - intent: pedir_cita
-  - action: appointment_form
-  - active_loop: appointment_form
-  # 1. User da el nombre (capturado como 'intent: None' por el form)
-  - intent: None
-  - action: appointment_form
-  - active_loop: appointment_form
-  # 2. User da la fecha (capturado como 'intent: None')
-  - intent: None
-  - action: appointment_form
-  - active_loop: null # El form termina
-  # 3. LA LÓGICA QUE FALTABA:
-  - action: action_create_appointment
+    - intent: pedir_cita
+    - action: appointment_form
+    - active_loop: appointment_form
 
-# --- HISTORIA DE NEGOCIO 2: Saludo -> Cita ---
-- story: Flujo de agendamiento (Después de Saludar)
+    # Usuario da nombre
+    - intent: None
+    - action: appointment_form
+    - active_loop: appointment_form
+
+    # Usuario da fecha
+    - intent: None
+    - action: appointment_form
+    - active_loop: null   # form termina
+
+    # Consultar horarios
+    - action: action_check_availability
+
+    # Usuario elige hora
+    - intent: dar_hora
+    - slot_was_set:
+        - hour: "<hora>"
+    - action: action_create_appointment
+
+
+# --- FLUJO 2: Saludo → pedir cita ---
+- story: Flujo saludo + cita
   steps:
-  - intent: greet
-  - action: utter_greet
-  - intent: pedir_cita
-  - action: appointment_form
-  - active_loop: appointment_form
-  # 1. User da el nombre
-  - intent: None
-  - action: appointment_form
-  - active_loop: appointment_form
-  # 2. User da la fecha (aquí usamos 'dar_fecha' para más robustez)
-  - intent: dar_fecha
-  - action: appointment_form
-  - active_loop: null # El form termina
-  # 3. LA LÓGICA QUE FALTABA:
-  - action: action_create_appointment
+    - intent: greet
+    - action: utter_greet
+
+    - intent: pedir_cita
+    - action: appointment_form
+    - active_loop: appointment_form
+
+    # Nombre
+    - intent: None
+    - action: appointment_form
+    - active_loop: appointment_form
+
+    # Fecha
+    - intent: dar_fecha
+    - action: appointment_form
+    - active_loop: null
+
+    # Consultar horarios
+    - action: action_check_availability
+
+    # Usuario elige hora
+    - intent: dar_hora
+    - slot_was_set:
+        - hour: "<hora>"
+    - action: action_create_appointment
