@@ -2,66 +2,21 @@ version: "3.1"
 
 stories:
 
-# --- CHITCHAT ---
-- story: Chitchat
-  steps:
-    - intent: greet
-    - action: utter_greet
-    - intent: affirm
-    - action: utter_ask_what_next
-
-# --- FLUJO 1: Pedir cita directo ---
-- story: Flujo de agendamiento directo
+- story: Flujo completo de agendamiento
   steps:
     - intent: pedir_cita
     - action: appointment_form
     - active_loop: appointment_form
 
-    # Usuario da nombre
     - intent: None
     - action: appointment_form
     - active_loop: appointment_form
 
-    # Usuario da fecha
     - intent: None
-    - action: appointment_form
-    - active_loop: null   # form termina
-
-    # Consultar horarios
-    - action: action_check_availability
-
-    # Usuario elige hora
-    - intent: dar_hora
-    - slot_was_set:
-        - hour: "<hora>"
-    - action: action_create_appointment
-
-
-# --- FLUJO 2: Saludo → pedir cita ---
-- story: Flujo saludo + cita
-  steps:
-    - intent: greet
-    - action: utter_greet
-
-    - intent: pedir_cita
-    - action: appointment_form
-    - active_loop: appointment_form
-
-    # Nombre
-    - intent: None
-    - action: appointment_form
-    - active_loop: appointment_form
-
-    # Fecha
-    - intent: dar_fecha
     - action: appointment_form
     - active_loop: null
 
-    # Consultar horarios
     - action: action_check_availability
 
-    # Usuario elige hora
     - intent: dar_hora
-    - slot_was_set:
-        - hour: "<hora>"
     - action: action_create_appointment

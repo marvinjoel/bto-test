@@ -40,6 +40,15 @@ nlu:
     - [martes 25 de noviembre](date)
     - [lunes 10](date)
     - [viernes 8](date)
+    - [sábado 6](date)
+    - [sabado 6](date)
+    - [sábado 3](date)
+    - [sabado 3](date)
+    - [martes 3](date)
+    - [viernes 6](date)
+    - [domingo 6](date)
+    - [lunes 8](date)
+    - [domingo 7](date)
 
 - intent: affirm
   examples: |

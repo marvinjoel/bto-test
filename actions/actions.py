@@ -141,33 +141,43 @@ class ActionCreateAppointment(Action):
         import re
         text = text.lower().strip()
 
-        # SIEMPRE usar SEPTIEMBRE
-        MONTH = "09"
-        YEAR = datetime.now().year
+        months = {
+            "septiembre": "09",
+            "setiembre": "09",
+            "sep": "09"
+        }
 
-        # 1️⃣ Formatos exactos: 25/09/2025 o 25-09-2025
+        # 1) DD/MM/YYYY
         try:
-            date = datetime.strptime(text, "%d/%m/%Y")
-            return date.strftime("%Y-%m-%d")
+            return datetime.strptime(text, "%d/%m/%Y").strftime("%Y-%m-%d")
         except:
             pass
 
         try:
-            date = datetime.strptime(text, "%d-%m-%Y")
-            return date.strftime("%Y-%m-%d")
+            return datetime.strptime(text, "%d-%m-%Y").strftime("%Y-%m-%d")
         except:
             pass
 
-        # 2️⃣ Formato: "martes 21"  → día extraído + mes fijo septiembre
-        numbers = re.findall(r"\d+", text)
-        if numbers:
-            day = int(numbers[0])
-            return f"{YEAR}-{MONTH}-{day:02d}"
-
-        # 3️⃣ Formato: "21 de septiembre"  → igual, pero ignoramos lo que diga el usuario
-        match = re.match(r"(\d{1,2})\s*de\s*\w+", text)
+        # 3) "3 de septiembre"
+        match = re.match(r"(\d{1,2})\s*(de\s*)?(\w+)", text)
         if match:
             day = int(match.group(1))
-            return f"{YEAR}-{MONTH}-{day:02d}"
+            month_name = match.group(3)
+            if month_name in months:
+                return f"2025-{months[month_name]}-{day:02d}"
+
+        # -------------------------
+        # 3) Formato: "sábado 6" / "sabado 6" / "martes 3"
+        # -------------------------
+        dias = [
+            "lunes", "martes", "miercoles", "miércoles",
+            "jueves", "viernes", "sabado", "sábado", "domingo"
+        ]
+        if any(d in text for d in dias):
+            numbers = re.findall(r"\d+", text)
+            if numbers:
+                day = int(numbers[0])
+                # POR AHORA todo septiembre, como tú pediste
+                return f"2025-09-{day:02d}"
 
         raise ValueError("No pude convertir la fecha")
